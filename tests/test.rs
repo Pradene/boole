@@ -1,4 +1,4 @@
-use boole::{adder, multiplier, gray_code};
+use boole::{adder, multiplier, gray_code, eval_formula};
 
 #[cfg(test)]
 mod tests {
@@ -36,6 +36,8 @@ mod tests {
         assert_eq!(a + b, adder(a, b))
     }
 
+
+
     #[test]
     fn test_multiplier1() {
         let a = 21;
@@ -68,6 +70,8 @@ mod tests {
         assert_eq!(a * b, multiplier(a, b))
     }
 
+
+
     #[test]
     fn test_gray_code1() {
         assert_eq!(0, gray_code(0))
@@ -86,5 +90,27 @@ mod tests {
     #[test]
     fn test_gray_code4() {
         assert_eq!(7, gray_code(5))
+    }
+
+
+
+    #[test]
+    fn test_eval_formula1() {
+        assert_eq!(true, eval_formula("10|"))
+    }
+
+    #[test]
+    fn test_eval_formula2() {
+        assert_eq!(false, eval_formula("10&"))
+    }
+
+    #[test]
+    fn test_eval_formula3() {
+        assert_eq!(true, eval_formula("1011||="))
+    }
+
+    #[test]
+    fn test_eval_formula4() {
+        assert_eq!(true, eval_formula("10|1="))
     }
 }
