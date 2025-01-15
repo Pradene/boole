@@ -19,7 +19,7 @@ pub fn adder(a: u32, b: u32) -> u32 {
     let mut carry;
     let mut res = a;
     let mut num = b;
-    
+
     while num != 0 {
         carry = (res & num) << 1;
         res = res ^ num;
@@ -27,4 +27,8 @@ pub fn adder(a: u32, b: u32) -> u32 {
     }
 
     res
+}
+
+pub fn gray_code(a: u32) -> u32 {
+    a ^ (a >> 1)
 }

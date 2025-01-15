@@ -1,3 +1,3 @@
-pub use boole::{adder, multiplier};
+pub use boole::*;
 
 pub mod boole;

@@ -1,4 +1,4 @@
-use boole::{adder, multiplier};
+use boole::{adder, multiplier, gray_code};
 
 #[cfg(test)]
 mod tests {
@@ -66,5 +66,25 @@ mod tests {
         let b = 1;
 
         assert_eq!(a * b, multiplier(a, b))
+    }
+
+    #[test]
+    fn test_gray_code1() {
+        assert_eq!(0, gray_code(0))
+    }
+
+    #[test]
+    fn test_gray_code2() {
+        assert_eq!(3, gray_code(2))
+    }
+
+    #[test]
+    fn test_gray_code3() {
+        assert_eq!(12, gray_code(8))
+    }
+
+    #[test]
+    fn test_gray_code4() {
+        assert_eq!(7, gray_code(5))
     }
 }
