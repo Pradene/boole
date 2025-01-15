@@ -69,7 +69,7 @@ pub fn eval_formula(formula: &str) -> bool {
             }, 
             '>' => {
                 if let (Some(a), Some(b)) = (stack.pop_back(), stack.pop_back()) {
-                    stack.push_back((a > b) as u8);
+                    stack.push_back((a >= b) as u8);
                 } else {
                     return false;
                 }
