@@ -44,57 +44,51 @@ pub fn eval_formula(formula: &str) -> bool {
 
     for ch in formula.chars() {
         match ch {
-            '0' => {
-                stack.push_back(false);
-            },
-            '1' => {
-                stack.push_back(true);
-            },
+            '0' => stack.push_back(false),
+            '1' => stack.push_back(true),
             '|' => {
                 if let (Some(b), Some(a)) = (stack.pop_back(), stack.pop_back()) {
                     stack.push_back(a | b);
                 } else {
                     return false;
                 }
-            }, 
+            }
             '&' => {
                 if let (Some(b), Some(a)) = (stack.pop_back(), stack.pop_back()) {
                     stack.push_back(a & b);
                 } else {
                     return false;
                 }
-            },
+            }
             '^' => {
                 if let (Some(b), Some(a)) = (stack.pop_back(), stack.pop_back()) {
                     stack.push_back(a ^ b);
                 } else {
                     return false;
                 }
-            }, 
+            }
             '>' => {
                 if let (Some(b), Some(a)) = (stack.pop_back(), stack.pop_back()) {
                     stack.push_back(!a | b);
                 } else {
                     return false;
                 }
-            },
+            }
             '=' => {
                 if let (Some(b), Some(a)) = (stack.pop_back(), stack.pop_back()) {
                     stack.push_back(a == b);
                 } else {
                     return false;
                 }
-            }, 
+            }
             '!' => {
                 if let Some(a) = stack.pop_back() {
                     stack.push_back(!a);
                 } else {
                     return false;
                 }
-            },
-            _ => {
-                return false;
             }
+            _ => return false,
         }
     }
 
@@ -154,3 +148,8 @@ pub fn print_truth_table(formula: &str) {
 
     print!("{}", truth_table);
 }
+
+
+// pub fn negation_normal_form(formula: &str) -> String {
+
+// }
