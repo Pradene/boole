@@ -17,6 +17,7 @@ pub fn multiplier(a: u32, b: u32) -> u32 {
     res
 }
 
+
 pub fn adder(a: u32, b: u32) -> u32 {
     let mut carry;
     let mut res = a;
@@ -31,10 +32,13 @@ pub fn adder(a: u32, b: u32) -> u32 {
     res
 }
 
+
 pub fn gray_code(a: u32) -> u32 {
     a ^ (a >> 1)
 }
 
+
+// Need to display error message if format is incorrect
 pub fn eval_formula(formula: &str) -> bool {
     let mut stack: LinkedList<u8> = LinkedList::new();
 
@@ -69,7 +73,7 @@ pub fn eval_formula(formula: &str) -> bool {
             }, 
             '>' => {
                 if let (Some(a), Some(b)) = (stack.pop_back(), stack.pop_back()) {
-                    stack.push_back((a >= b) as u8);
+                    stack.push_back((a <= b) as u8);
                 } else {
                     return false;
                 }
@@ -87,7 +91,7 @@ pub fn eval_formula(formula: &str) -> bool {
                 } else {
                     return false;
                 }
-            }
+            },
             _ => {
                 return false;
             }
@@ -95,4 +99,58 @@ pub fn eval_formula(formula: &str) -> bool {
     }
 
     stack.len() == 1 && stack.pop_back().unwrap() == 1
+}
+
+
+pub fn print_truth_table(formula: &str) {
+    let symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ!&|^>=";
+    // Checking if formula contains a wrong character
+    if formula.chars().filter(| &c | symbols.contains(c)).count() != formula.len() {
+        return;
+    }
+
+    let get_unique_variables = || {
+        let mut variables: Vec<_> =
+            formula.chars()
+            .filter(|&c| c.is_alphabetic())
+            .collect();
+        variables.sort();
+        variables.dedup();
+
+        variables
+    };
+
+    let unique_variables = get_unique_variables();
+    let n = unique_variables.len();
+
+    let mut hash_table = format!("");
+    
+    for var in unique_variables.iter() {
+        hash_table.push_str(&format!("| {} ", var));
+    }
+    hash_table.push_str(&format!("| = |\n"));
+    
+    for _ in 0..n {
+        hash_table.push_str(&format!("|---"));
+    }
+    hash_table.push_str(&format!("|---|\n"));
+    
+    // Generate all combinations of truth values (0 or 1) for n variables
+    for i in 0..(1 << n) {
+        let mut combination = Vec::new();
+        let mut f = formula.to_string();
+
+        for (j, var) in unique_variables.iter().enumerate() {
+            combination.push((i >> ((n - 1) - j)) & 1);
+            let value = combination[j];
+            
+            f = f.replace(&var.to_string(), &value.to_string());
+            
+            hash_table.push_str(&format!("| {:?} ", value));
+        }
+
+        hash_table.push_str(&format!("| {} |\n", if eval_formula(&f) {1} else {0}));
+    }
+
+    print!("{}", hash_table);
 }

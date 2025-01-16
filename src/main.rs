@@ -1,3 +1,7 @@
+use boole::print_truth_table;
+
 fn main() {
-    println!("Hello, world!");
+    let formula = "AB&C|";
+
+    print_truth_table(formula);
 }
