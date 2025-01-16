@@ -40,47 +40,47 @@ pub fn gray_code(a: u32) -> u32 {
 
 // Need to display error message if format is incorrect
 pub fn eval_formula(formula: &str) -> bool {
-    let mut stack: LinkedList<u8> = LinkedList::new();
+    let mut stack: LinkedList<bool> = LinkedList::new();
 
     for ch in formula.chars() {
         match ch {
             '0' => {
-                stack.push_back(0);
+                stack.push_back(false);
             },
             '1' => {
-                stack.push_back(1);
+                stack.push_back(true);
             },
             '|' => {
-                if let (Some(a), Some(b)) = (stack.pop_back(), stack.pop_back()) {
+                if let (Some(b), Some(a)) = (stack.pop_back(), stack.pop_back()) {
                     stack.push_back(a | b);
                 } else {
                     return false;
                 }
             }, 
             '&' => {
-                if let (Some(a), Some(b)) = (stack.pop_back(), stack.pop_back()) {
+                if let (Some(b), Some(a)) = (stack.pop_back(), stack.pop_back()) {
                     stack.push_back(a & b);
                 } else {
                     return false;
                 }
             },
             '^' => {
-                if let (Some(a), Some(b)) = (stack.pop_back(), stack.pop_back()) {
+                if let (Some(b), Some(a)) = (stack.pop_back(), stack.pop_back()) {
                     stack.push_back(a ^ b);
                 } else {
                     return false;
                 }
             }, 
             '>' => {
-                if let (Some(a), Some(b)) = (stack.pop_back(), stack.pop_back()) {
-                    stack.push_back((a <= b) as u8);
+                if let (Some(b), Some(a)) = (stack.pop_back(), stack.pop_back()) {
+                    stack.push_back(!a | b);
                 } else {
                     return false;
                 }
             },
             '=' => {
-                if let (Some(a), Some(b)) = (stack.pop_back(), stack.pop_back()) {
-                    stack.push_back((a == b) as u8);
+                if let (Some(b), Some(a)) = (stack.pop_back(), stack.pop_back()) {
+                    stack.push_back(a == b);
                 } else {
                     return false;
                 }
@@ -98,7 +98,7 @@ pub fn eval_formula(formula: &str) -> bool {
         }
     }
 
-    stack.len() == 1 && stack.pop_back().unwrap() == 1
+    stack.len() == 1 && stack.pop_back().unwrap() == true
 }
 
 
@@ -123,17 +123,17 @@ pub fn print_truth_table(formula: &str) {
     let unique_variables = get_unique_variables();
     let n = unique_variables.len();
 
-    let mut hash_table = format!("");
+    let mut truth_table = format!("");
     
     for var in unique_variables.iter() {
-        hash_table.push_str(&format!("| {} ", var));
+        truth_table.push_str(&format!("| {} ", var));
     }
-    hash_table.push_str(&format!("| = |\n"));
+    truth_table.push_str(&format!("| = |\n"));
     
     for _ in 0..n {
-        hash_table.push_str(&format!("|---"));
+        truth_table.push_str(&format!("|---"));
     }
-    hash_table.push_str(&format!("|---|\n"));
+    truth_table.push_str(&format!("|---|\n"));
     
     // Generate all combinations of truth values (0 or 1) for n variables
     for i in 0..(1 << n) {
@@ -146,11 +146,11 @@ pub fn print_truth_table(formula: &str) {
             
             f = f.replace(&var.to_string(), &value.to_string());
             
-            hash_table.push_str(&format!("| {:?} ", value));
+            truth_table.push_str(&format!("| {:?} ", value));
         }
 
-        hash_table.push_str(&format!("| {} |\n", if eval_formula(&f) {1} else {0}));
+        truth_table.push_str(&format!("| {} |\n", if eval_formula(&f) {1} else {0}));
     }
 
-    print!("{}", hash_table);
+    print!("{}", truth_table);
 }
