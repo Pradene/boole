@@ -1,5 +1,7 @@
 use std::collections::LinkedList;
 
+use crate::ast::AstNode;
+
 pub fn multiplier(a: u32, b: u32) -> u32 {
     let mut res = 0;
     let mut mul = b;
@@ -150,6 +152,9 @@ pub fn print_truth_table(formula: &str) {
 }
 
 
-// pub fn negation_normal_form(formula: &str) -> String {
+pub fn negation_normal_form(formula: &str) -> String {
+    let ast = AstNode::try_from(formula).expect("Can't create AST from formula");
+    let nnf = ast.to_nnf();
 
-// }
+    nnf.to_rpn()
+}

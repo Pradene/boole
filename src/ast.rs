@@ -6,7 +6,7 @@ pub enum Operator {
     Or,          // Logical OR (∨)
     And,         // Logical AND (∧)
     Not,         // Logical NOT (¬)
-    Xor,         // Logical XOR (exclusive OR)
+    Xor,         // Logical XOR (exclusive OR ⊕)
     Iff,         // Logical Equivalence (↔)
     Implies,     // Logical Implication (→)
 }
@@ -25,7 +25,7 @@ impl fmt::Display for Operator {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum AstNode {
     Variable(String),
     BinaryOperator(Operator, Box<AstNode>, Box<AstNode>),
@@ -98,30 +98,179 @@ impl TryFrom<&str> for AstNode {
 }
 
 impl AstNode {
-    pub fn to_string(&self) -> String {
+    
+    pub fn to_nnf(&self) -> AstNode {
         match self {
-            AstNode::Variable(name) => name.clone(), // For variables, just return the name
+            // Variables remain unchanged
+            AstNode::Variable(_) => self.clone(),
+            
+            // Handle unary operators (NOT)
+            AstNode::UnaryOperator(Operator::Not, child) => {
+                match &**child {
+                    // Double negation elimination: ¬¬A → A
+                    AstNode::UnaryOperator(Operator::Not, grandchild) => {
+                        grandchild.to_nnf()
+                    },
+                    
+                    // De Morgan's laws: ¬(A ∧ B) → (¬A ∨ ¬B)
+                    AstNode::BinaryOperator(Operator::And, left, right) => {
+                        AstNode::BinaryOperator(
+                            Operator::Or,
+                            Box::new(AstNode::UnaryOperator(Operator::Not, left.clone()).to_nnf()),
+                            Box::new(AstNode::UnaryOperator(Operator::Not, right.clone()).to_nnf())
+                        )
+                    },
+                    
+                    // De Morgan's laws: ¬(A ∨ B) → (¬A ∧ ¬B)
+                    AstNode::BinaryOperator(Operator::Or, left, right) => {
+                        AstNode::BinaryOperator(
+                            Operator::And,
+                            Box::new(AstNode::UnaryOperator(Operator::Not, left.clone()).to_nnf()),
+                            Box::new(AstNode::UnaryOperator(Operator::Not, right.clone()).to_nnf())
+                        )
+                    },
+                    
+                    // Handle implication: ¬(A → B) ≡ A ∧ ¬B
+                    AstNode::BinaryOperator(Operator::Implies, left, right) => {
+                        AstNode::BinaryOperator(
+                            Operator::And,
+                            Box::new(left.to_nnf()),
+                            Box::new(AstNode::UnaryOperator(Operator::Not, right.clone()).to_nnf())
+                        )
+                    },
+                    
+                    // Handle equivalence: ¬(A ↔ B) ≡ (A ∧ ¬B) ∨ (¬A ∧ B)
+                    AstNode::BinaryOperator(Operator::Iff, left, right) => {
+                        AstNode::BinaryOperator(
+                            Operator::Or,
+                            Box::new(AstNode::BinaryOperator(
+                                Operator::And,
+                                Box::new(left.to_nnf()),
+                                Box::new(AstNode::UnaryOperator(Operator::Not, right.clone()).to_nnf())
+                            )),
+                            Box::new(AstNode::BinaryOperator(
+                                Operator::And,
+                                Box::new(AstNode::UnaryOperator(Operator::Not, left.clone()).to_nnf()),
+                                Box::new(right.to_nnf())
+                            ))
+                        )
+                    },
+                    
+                    // Handle XOR: ¬(A ⊕ B) ≡ (A ↔ B) ≡ (A ∧ B) ∨ (¬A ∧ ¬B)
+                    AstNode::BinaryOperator(Operator::Xor, left, right) => {
+                        AstNode::BinaryOperator(
+                            Operator::Or,
+                            Box::new(AstNode::BinaryOperator(
+                                Operator::And,
+                                Box::new(left.to_nnf()),
+                                Box::new(right.to_nnf())
+                            )),
+                            Box::new(AstNode::BinaryOperator(
+                                Operator::And,
+                                Box::new(AstNode::UnaryOperator(Operator::Not, left.clone()).to_nnf()),
+                                Box::new(AstNode::UnaryOperator(Operator::Not, right.clone()).to_nnf())
+                            ))
+                        )
+                    },
+                    
+                    // For variables, keep the NOT
+                    AstNode::Variable(_) => self.clone(),
+
+                    _ => panic!("Error"),
+                }
+            },
+            
+            // Handle binary operators
             AstNode::BinaryOperator(op, left, right) => {
-                let left_str = left.to_string();   // Recursively get the left operand's string
-                let right_str = right.to_string(); // Recursively get the right operand's string
-                let op_str = match op {
-                    Operator::And => "&",
-                    Operator::Or => "|",
-                    Operator::Xor => "^",
-                    Operator::Iff => "=",
-                    Operator::Implies => ">",
-                    _ => panic!("Unsupported operator"),
-                };
-                format!("({} {} {})", left_str, op_str, right_str) // Format as "(left operator right)"
-            }
-            AstNode::UnaryOperator(op, operand) => {
-                let operand_str = operand.to_string(); // Recursively get the operand's string
-                let op_str = match op {
-                    Operator::Not => "!", // Represent NOT with "!"
-                    _ => panic!("Unsupported unary operator"),
-                };
-                format!("{}{}", op_str, operand_str) // Format as "!operand"
-            }
+                match op {
+                    // AND and OR just need their children converted
+                    Operator::And | Operator::Or => {
+                        AstNode::BinaryOperator(
+                            op.clone(),
+                            Box::new(left.to_nnf()),
+                            Box::new(right.to_nnf())
+                        )
+                    },
+                    
+                    // A → B ≡ ¬A ∨ B
+                    Operator::Implies => {
+                        AstNode::BinaryOperator(
+                            Operator::Or,
+                            Box::new(AstNode::UnaryOperator(Operator::Not, left.clone()).to_nnf()),
+                            Box::new(right.to_nnf())
+                        )
+                    },
+                    
+                    // A ↔ B ≡ (A ∧ B) ∨ (¬A ∧ ¬B)
+                    Operator::Iff => {
+                        AstNode::BinaryOperator(
+                            Operator::Or,
+                            Box::new(AstNode::BinaryOperator(
+                                Operator::And,
+                                Box::new(left.to_nnf()),
+                                Box::new(right.to_nnf())
+                            )),
+                            Box::new(AstNode::BinaryOperator(
+                                Operator::And,
+                                Box::new(AstNode::UnaryOperator(Operator::Not, left.clone()).to_nnf()),
+                                Box::new(AstNode::UnaryOperator(Operator::Not, right.clone()).to_nnf())
+                            ))
+                        )
+                    },
+                    
+                    // A ⊕ B ≡ (A ∧ ¬B) ∨ (¬A ∧ B)
+                    Operator::Xor => {
+                        AstNode::BinaryOperator(
+                            Operator::Or,
+                            Box::new(AstNode::BinaryOperator(
+                                Operator::And,
+                                Box::new(left.to_nnf()),
+                                Box::new(AstNode::UnaryOperator(Operator::Not, right.clone()).to_nnf())
+                            )),
+                            Box::new(AstNode::BinaryOperator(
+                                Operator::And,
+                                Box::new(AstNode::UnaryOperator(Operator::Not, left.clone()).to_nnf()),
+                                Box::new(right.to_nnf())
+                            ))
+                        )
+                    },
+                    
+                    // NOT should never appear as a binary operator
+                    _ => panic!("Error"),
+                }
+            },
+            _ => panic!("Error"),
+        }
+    }
+
+    pub fn to_rpn(&self) -> String {
+        match self {
+            AstNode::Variable(var) => var.clone(),
+            
+            AstNode::UnaryOperator(op, child) => {
+                format!("{}{}", 
+                    child.to_rpn(),
+                    match op {
+                        Operator::Not => "!",
+                        _ => panic!("Unexpected unary operator"),
+                    }
+                )
+            },
+            
+            AstNode::BinaryOperator(op, left, right) => {
+                format!("{}{}{}", 
+                    left.to_rpn(),
+                    right.to_rpn(),
+                    match op {
+                        Operator::Or => "|",
+                        Operator::And => "&",
+                        Operator::Xor => "^",
+                        Operator::Iff => "=",
+                        Operator::Implies => ">",
+                        _ => panic!("Unexpected binary operator"),
+                    }
+                )
+            },
         }
     }
 }
