@@ -89,7 +89,7 @@ pub fn eval_formula(formula: &str) -> Result<bool, String> {
 }
 
 
-pub fn print_truth_table(formula: &str) {
+pub fn truth_table(formula: &str) -> String {
 
     let ast = AstNode::try_from(formula).expect("Can't create AST from formula");
     let mut truth_table = format!("");
@@ -122,7 +122,7 @@ pub fn print_truth_table(formula: &str) {
         truth_table.push_str(&format!("| {} |\n", if ast.evaluate(&values).expect("Couldn't evaluate formula") {1} else {0}));
     }
 
-    print!("{}", truth_table);
+    truth_table
 }
 
 
