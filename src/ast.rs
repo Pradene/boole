@@ -27,7 +27,7 @@ impl fmt::Display for Operator {
 
 #[derive(Debug, Clone)]
 pub enum AstNode {
-    Variable(String),
+    Variable(char),
     BinaryOperator(Operator, Box<AstNode>, Box<AstNode>),
     UnaryOperator(Operator, Box<AstNode>),
 }
@@ -54,8 +54,7 @@ impl TryFrom<&str> for AstNode {
         
         for token in rpn.chars() {
             match token {
-                '1' => stack.push_back(AstNode::Variable(String::from("1"))),  // '1' is true
-                '0' => stack.push_back(AstNode::Variable(String::from("0"))),  // '0' is false
+                'A'..='Z' => stack.push_back(AstNode::Variable(token)),
                 '|' => {
                     let right = stack.pop_back().ok_or_else(|| "Missing operand for OR".to_string())?;
                     let left = stack.pop_back().ok_or_else(|| "Missing operand for OR".to_string())?;
@@ -98,7 +97,37 @@ impl TryFrom<&str> for AstNode {
 }
 
 impl AstNode {
-    
+
+    pub fn evaluate(&self, vars: &[bool; 26]) -> bool {
+        match self {
+            AstNode::Variable(var) => {
+                let index = (*var as usize) - ('A' as usize);
+                vars[index]
+            },
+            
+            AstNode::UnaryOperator(op, child) => {
+                match op {
+                    Operator::Not => !child.evaluate(vars),
+                    _ => panic!("Invalid unary operator"),
+                }
+            },
+            
+            AstNode::BinaryOperator(op, left, right) => {
+                let left_val = left.evaluate(vars);
+                let right_val = right.evaluate(vars);
+                
+                match op {
+                    Operator::Or => left_val | right_val,
+                    Operator::And => left_val & right_val,
+                    Operator::Xor => left_val ^ right_val,
+                    Operator::Implies => !left_val | right_val,
+                    Operator::Iff => left_val == right_val,
+                    _ => panic!("Invalid binary operator"),
+                }
+            },
+        }
+    }
+
     pub fn to_nnf(&self) -> AstNode {
         match self {
             // Variables remain unchanged
@@ -245,7 +274,7 @@ impl AstNode {
 
     pub fn to_rpn(&self) -> String {
         match self {
-            AstNode::Variable(var) => var.clone(),
+            AstNode::Variable(var) => String::from(*var),
             
             AstNode::UnaryOperator(op, child) => {
                 format!("{}{}", 

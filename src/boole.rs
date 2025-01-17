@@ -99,11 +99,8 @@ pub fn eval_formula(formula: &str) -> bool {
 
 
 pub fn print_truth_table(formula: &str) {
-    let symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ!&|^>=";
-    // Checking if formula contains a wrong character
-    if formula.chars().filter(| &c | symbols.contains(c)).count() != formula.len() {
-        return;
-    }
+
+    let ast = AstNode::try_from(formula).expect("Can't create AST from formula");
 
     let get_unique_variables = || {
         let mut variables: Vec<_> =
@@ -132,20 +129,14 @@ pub fn print_truth_table(formula: &str) {
     truth_table.push_str(&format!("|---|\n"));
     
     // Generate all combinations of truth values (0 or 1) for n variables
+    let mut var = [false; 26];
     for i in 0..(1 << n) {
-        let mut combination = Vec::new();
-        let mut f = formula.to_string();
-
-        for (j, var) in unique_variables.iter().enumerate() {
-            combination.push((i >> ((n - 1) - j)) & 1);
-            let value = combination[j];
-            
-            f = f.replace(&var.to_string(), &value.to_string());
-            
-            truth_table.push_str(&format!("| {:?} ", value));
+        for j in 0..n {
+            var[j] = (i >> ((n - 1) - j)) & 1 == 1;
+            truth_table.push_str(&format!("| {:?} ", if var[j] {1} else {0}));
         }
 
-        truth_table.push_str(&format!("| {} |\n", if eval_formula(&f) {1} else {0}));
+        truth_table.push_str(&format!("| {} |\n", if ast.evaluate(&var) {1} else {0}));
     }
 
     print!("{}", truth_table);
