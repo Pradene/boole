@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use boole::ast::AstNode;
 use boole::boole::{negation_normal_form, eval_formula, print_truth_table};
 
@@ -16,9 +18,11 @@ fn main() {
 
     println!("{}", negation_normal_form(formula));
 
-    let var = [false; 26];
+    let mut variables: HashMap<char, bool> = HashMap::new();
+    variables.insert('A', false);
+    variables.insert('B', true);
 
-    println!("{}", ast.evaluate(&var));
-    println!("{}", eval_formula(formula));
+    println!("{}", ast.evaluate(&variables).expect("Couldn't evaluate formula, because variable not found"));
+    println!("{}", eval_formula(formula).expect("Couldn't evaluate formula"));
 
 }

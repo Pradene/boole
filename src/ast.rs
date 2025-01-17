@@ -1,4 +1,4 @@
-use std::collections::LinkedList;
+use std::collections::{LinkedList, HashMap};
 use std::fmt;
 
 #[derive(Debug, Clone)]
@@ -98,30 +98,35 @@ impl TryFrom<&str> for AstNode {
 
 impl AstNode {
 
-    pub fn evaluate(&self, vars: &[bool; 26]) -> bool {
+    pub fn evaluate(&self, vars: &HashMap<char, bool>) -> Result<bool, String> {
         match self {
             AstNode::Variable(var) => {
-                let index = (*var as usize) - ('A' as usize);
-                vars[index]
+                match vars.get(var) {
+                    Some(value) => Ok(*value),
+                    None => Err(format!("Variable '{}' not found", var)),
+                }
             },
             
             AstNode::UnaryOperator(op, child) => {
                 match op {
-                    Operator::Not => !child.evaluate(vars),
+                    Operator::Not => {
+                        let value = child.evaluate(vars)?;
+                        Ok(!value)
+                    }
                     _ => panic!("Invalid unary operator"),
                 }
             },
             
             AstNode::BinaryOperator(op, left, right) => {
-                let left_val = left.evaluate(vars);
-                let right_val = right.evaluate(vars);
+                let left_val = left.evaluate(vars)?;
+                let right_val = right.evaluate(vars)?;
                 
                 match op {
-                    Operator::Or => left_val | right_val,
-                    Operator::And => left_val & right_val,
-                    Operator::Xor => left_val ^ right_val,
-                    Operator::Implies => !left_val | right_val,
-                    Operator::Iff => left_val == right_val,
+                    Operator::Or        => Ok(left_val | right_val),
+                    Operator::And       => Ok(left_val & right_val),
+                    Operator::Xor       => Ok(left_val ^ right_val),
+                    Operator::Implies   => Ok(!left_val | right_val),
+                    Operator::Iff       => Ok(left_val == right_val),
                     _ => panic!("Invalid binary operator"),
                 }
             },
