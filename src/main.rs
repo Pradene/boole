@@ -23,6 +23,12 @@ fn main() {
     variables.insert('B', true);
 
     println!("{}", ast.evaluate(&variables).expect("Couldn't evaluate formula, because variable not found"));
-    println!("{}", eval_formula(formula).expect("Couldn't evaluate formula"));
+    // println!("{}", eval_formula(formula).expect("Couldn't evaluate formula"));
+
+    let f = "AB|!C!&";
+    let a = AstNode::try_from(f).expect("Couldn't create AST");
+    let cnf = a.to_cnf();
+    println!("{}", cnf.to_rpn());
+    println!("{}", cnf);
 
 }

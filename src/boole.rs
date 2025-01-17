@@ -45,9 +45,7 @@ pub fn eval_formula(formula: &str) -> Result<bool, String> {
 
     // Helper function to evaluate binary operations
     fn eval_binary_op<F>(op: F, stack: &mut LinkedList<bool>) -> Result<(), String>
-    where
-        F: Fn(bool, bool) -> bool,
-    {
+    where F: Fn(bool, bool) -> bool {
         if let (Some(b), Some(a)) = (stack.pop_back(), stack.pop_back()) {
             stack.push_back(op(a, b));
             Ok(())
@@ -58,9 +56,7 @@ pub fn eval_formula(formula: &str) -> Result<bool, String> {
 
     // Helper function to evaluate unary operations
     fn eval_unary_op<F>(op: F, stack: &mut LinkedList<bool>) -> Result<(), String>
-    where
-        F: Fn(bool) -> bool,
-    {
+    where F: Fn(bool) -> bool {
         if let Some(a) = stack.pop_back() {
             stack.push_back(op(a));
             Ok(())

@@ -277,6 +277,122 @@ impl AstNode {
         }
     }
 
+    pub fn to_cnf(self) -> AstNode {        
+        fn distribute(node: AstNode) -> AstNode {
+            match node {
+                AstNode::Variable(_) | AstNode::UnaryOperator(_, _) => node,
+                
+                AstNode::BinaryOperator(op, left, right) => match op {
+                    Operator::And => {
+                        // Ensure right-association of AND operations
+                        let right_cnf = distribute(*right);
+                        match distribute(*left) {
+                            // If left side is AND, we need to rebalance
+                            AstNode::BinaryOperator(Operator::And, a, b) => {
+                                AstNode::BinaryOperator(
+                                    Operator::And,
+                                    a,
+                                    Box::new(AstNode::BinaryOperator(
+                                        Operator::And,
+                                        b,
+                                        Box::new(right_cnf)
+                                    ))
+                                )
+                            },
+                            left_cnf => AstNode::BinaryOperator(
+                                Operator::And,
+                                Box::new(left_cnf),
+                                Box::new(right_cnf)
+                            )
+                        }
+                    },
+                    
+                    Operator::Or => match (*left, *right) {
+                        (AstNode::BinaryOperator(Operator::And, a, b), c) => {
+                            // Distribute and ensure right-association
+                            let first_or = distribute(AstNode::BinaryOperator(
+                                Operator::Or,
+                                a,
+                                Box::new(c.clone())
+                            ));
+                            
+                            let second_or = distribute(AstNode::BinaryOperator(
+                                Operator::Or,
+                                b,
+                                Box::new(c)
+                            ));
+                            
+                            // Ensure right-association of the resulting AND
+                            match first_or {
+                                AstNode::BinaryOperator(Operator::And, x, y) => {
+                                    AstNode::BinaryOperator(
+                                        Operator::And,
+                                        x,
+                                        Box::new(AstNode::BinaryOperator(
+                                            Operator::And,
+                                            y,
+                                            Box::new(second_or)
+                                        ))
+                                    )
+                                },
+                                _ => AstNode::BinaryOperator(
+                                    Operator::And,
+                                    Box::new(first_or),
+                                    Box::new(second_or)
+                                )
+                            }
+                        },
+                        
+                        (a, AstNode::BinaryOperator(Operator::And, b, c)) => {
+                            let first_or = distribute(AstNode::BinaryOperator(
+                                Operator::Or,
+                                Box::new(a.clone()),
+                                b
+                            ));
+                            
+                            let second_or = distribute(AstNode::BinaryOperator(
+                                Operator::Or,
+                                Box::new(a),
+                                c
+                            ));
+                            
+                            // Same right-association treatment
+                            match first_or {
+                                AstNode::BinaryOperator(Operator::And, x, y) => {
+                                    AstNode::BinaryOperator(
+                                        Operator::And,
+                                        x,
+                                        Box::new(AstNode::BinaryOperator(
+                                            Operator::And,
+                                            y,
+                                            Box::new(second_or)
+                                        ))
+                                    )
+                                },
+                                _ => AstNode::BinaryOperator(
+                                    Operator::And,
+                                    Box::new(first_or),
+                                    Box::new(second_or)
+                                )
+                        }
+                    },
+                    
+                    (a, b) => AstNode::BinaryOperator(
+                        Operator::Or,
+                        Box::new(distribute(a)),
+                        Box::new(distribute(b))
+                    ),
+                },
+                
+                _ => unreachable!(),
+                }
+            }
+        }
+
+        let nnf = self.to_nnf();
+        distribute(nnf)
+    }
+
     pub fn to_rpn(&self) -> String {
         match self {
             AstNode::Variable(var) => String::from(*var),
