@@ -4,7 +4,8 @@ use boole::ast::AstNode;
 use boole::boole::{
     negation_normal_form,
     eval_formula,
-    truth_table
+    print_truth_table,
+    sat
 };
 
 fn main() {
@@ -17,6 +18,8 @@ fn main() {
     // let f = "AB&C&D&";
     // let f = "AB&C&D|";
 
+    println!("{}", sat(&f));
+    print_truth_table(&f);
     let a = AstNode::try_from(f).expect("Couldn't create AST");
     println!("{}", a);
     println!("{}", a.to_cnf().to_rpn());

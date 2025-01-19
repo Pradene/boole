@@ -89,40 +89,39 @@ pub fn eval_formula(formula: &str) -> Result<bool, String> {
 }
 
 
-pub fn truth_table(formula: &str) -> String {
-
+pub fn print_truth_table(formula: &str) {
+    // Get the truth table from the existing method
     let ast = AstNode::try_from(formula).expect("Can't create AST from formula");
-    let mut truth_table = format!("");
-    
-    let unique_variables: HashSet<_> = 
-        formula.chars()
-        .filter(|&c| c.is_alphabetic())
-        .collect();
-    let n = unique_variables.len();
-    
-    for var in unique_variables.iter() {
-        truth_table.push_str(&format!("| {} ", var));
+    let truth_table = ast.truth_table();
+
+    // Check if the truth table is empty
+    if truth_table.is_empty() {
+        println!("No truth table to print.");
+        return;
     }
-    truth_table.push_str(&format!("| = |\n"));
-    
-    for _ in 0..n {
-        truth_table.push_str(&format!("|---"));
+
+    // Get the variables from the truth table
+    let var_list: Vec<char> = ast.get_variables().into_iter().collect();
+
+    // Print the header
+    for var in &var_list {
+        print!("| {} ", var);
     }
-    truth_table.push_str(&format!("|---|\n"));
-    
-    // Generate all combinations of truth values (0 or 1) for n variables
-    for i in 0..(1 << n) {
-        let mut values: HashMap<char, bool> = HashMap::new();
-        for (index, variable) in unique_variables.clone().into_iter().enumerate() {
-            let value = (i >> ((n - 1) - index)) & 1 == 1;
-            truth_table.push_str(&format!("| {:?} ", if value {1} else {0}));
-            values.insert(variable, value);
+    println!("| = |");
+
+    // Print the separator line
+    for _ in &var_list {
+        print!("|---");
+    }
+    println!("|---|");
+
+    // Print each row of the truth table
+    for (values, result) in truth_table {
+        for var in &var_list {
+            print!("| {} ", if *values.get(var).unwrap() { 1 } else { 0 });
         }
-
-        truth_table.push_str(&format!("| {} |\n", if ast.evaluate(&values).expect("Couldn't evaluate formula") {1} else {0}));
+        println!("| {} |", if result { 1 } else { 0 });
     }
-
-    truth_table
 }
 
 
@@ -131,4 +130,32 @@ pub fn negation_normal_form(formula: &str) -> String {
     let nnf = ast.to_nnf();
 
     nnf.to_rpn()
+}
+
+
+pub fn conjunctive_normal_form(formula: &str) -> String {
+    let ast = AstNode::try_from(formula).expect("Can't create AST from formula");
+    let nnf = ast.to_cnf();
+
+    nnf.to_rpn()
+}
+
+
+pub fn sat(formula: &str) -> bool {
+    let ast = AstNode::try_from(formula).expect("Can't create AST from formula");
+    let truth_table = ast.truth_table();
+
+    // Check if the truth table is empty
+    if truth_table.is_empty() {
+        return false;
+    }
+
+    // Print each row of the truth table
+    for (values, result) in truth_table {
+        if result {
+            return true;
+        }
+    }
+
+    false
 }

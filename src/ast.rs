@@ -161,7 +161,7 @@ impl AstNode {
             let mut values = HashMap::new();
             for (j, &var) in var_list.iter().enumerate() {
                 // Assign true/false based on the current bit in the integer i
-                values.insert(var, (i >> j) & 1 == 1);
+                values.insert(var, (i >> ((num_vars - 1) - j)) & 1 == 1);
             }
 
             // Step 3: Evaluate the AST with the current variable assignments
