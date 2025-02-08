@@ -1,4 +1,4 @@
-use std::collections::LinkedList;
+use std::collections::{HashSet, LinkedList};
 
 use crate::ast::AstNode;
 
@@ -19,7 +19,6 @@ pub fn multiplier(a: u32, b: u32) -> u32 {
     return res;
 }
 
-
 pub fn adder(a: u32, b: u32) -> u32 {
     let mut carry;
     let mut res = a;
@@ -34,18 +33,18 @@ pub fn adder(a: u32, b: u32) -> u32 {
     return res;
 }
 
-
 pub fn gray_code(a: u32) -> u32 {
     return a ^ (a >> 1);
 }
-
 
 pub fn eval_formula(formula: &str) -> Result<bool, String> {
     let mut stack: LinkedList<bool> = LinkedList::new();
 
     // Helper function to evaluate binary operations
     fn eval_binary_op<F>(op: F, stack: &mut LinkedList<bool>) -> Result<(), String>
-    where F: Fn(bool, bool) -> bool {
+    where
+        F: Fn(bool, bool) -> bool,
+    {
         if let (Some(b), Some(a)) = (stack.pop_back(), stack.pop_back()) {
             stack.push_back(op(a, b));
             Ok(())
@@ -56,7 +55,9 @@ pub fn eval_formula(formula: &str) -> Result<bool, String> {
 
     // Helper function to evaluate unary operations
     fn eval_unary_op<F>(op: F, stack: &mut LinkedList<bool>) -> Result<(), String>
-    where F: Fn(bool) -> bool {
+    where
+        F: Fn(bool) -> bool,
+    {
         if let Some(a) = stack.pop_back() {
             stack.push_back(op(a));
             Ok(())
@@ -87,7 +88,6 @@ pub fn eval_formula(formula: &str) -> Result<bool, String> {
         return Err("Invalid formula: stack has more than one value or is empty".to_string());
     }
 }
-
 
 pub fn print_truth_table(formula: &str) {
     // Get the truth table from the existing method
@@ -124,7 +124,6 @@ pub fn print_truth_table(formula: &str) {
     }
 }
 
-
 pub fn negation_normal_form(formula: &str) -> String {
     let ast = AstNode::try_from(formula).expect("Can't create AST from formula");
     let nnf = ast.to_nnf();
@@ -132,14 +131,12 @@ pub fn negation_normal_form(formula: &str) -> String {
     return nnf.to_rpn();
 }
 
-
 pub fn conjunctive_normal_form(formula: &str) -> String {
     let ast = AstNode::try_from(formula).expect("Can't create AST from formula");
     let nnf = ast.to_cnf();
 
     return nnf.to_rpn();
 }
-
 
 pub fn sat(formula: &str) -> bool {
     let ast = AstNode::try_from(formula).expect("Can't create AST from formula");
@@ -162,12 +159,11 @@ pub fn sat(formula: &str) -> bool {
 
 pub fn powerset(set: Vec<i32>) -> Vec<Vec<i32>> {
     let mut res = Vec::new();
-    
-    
+
     let possibility = 1 << set.len();
     for i in 0..possibility {
         let mut v = Vec::new();
-        
+
         for (index, value) in set.iter().enumerate() {
             if i & (1 << index) != 0 {
                 v.push(*value);
@@ -178,4 +174,11 @@ pub fn powerset(set: Vec<i32>) -> Vec<Vec<i32>> {
     }
 
     return res;
+}
+
+pub fn evaluate_set(formula: &str, sets: Vec<Vec<i32>>) -> Vec<i32> {
+    let ast = AstNode::try_from(formula).unwrap();
+    let universal_set: HashSet<i32> = sets.iter().flatten().cloned().collect();
+
+    return ast.evaluate_set(sets, universal_set).unwrap();
 }

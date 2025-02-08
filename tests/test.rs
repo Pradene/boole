@@ -1,11 +1,6 @@
 use boole::boole::{
-    adder,
-    multiplier,
-    gray_code,
-    eval_formula,
-    negation_normal_form,
-    conjunctive_normal_form,
-    sat
+    adder, conjunctive_normal_form, eval_formula, evaluate_set, gray_code, multiplier,
+    negation_normal_form, sat,
 };
 
 #[cfg(test)]
@@ -46,8 +41,6 @@ mod tests {
         assert_eq!(a + b, adder(a, b))
     }
 
-
-
     #[test]
     fn test_multiplier1() {
         let a = 21;
@@ -80,8 +73,6 @@ mod tests {
         assert_eq!(a * b, multiplier(a, b))
     }
 
-
-
     #[test]
     fn test_gray_code1() {
         assert_eq!(0, gray_code(0))
@@ -101,8 +92,6 @@ mod tests {
     fn test_gray_code4() {
         assert_eq!(7, gray_code(5))
     }
-
-
 
     #[test]
     fn test_eval_formula1() {
@@ -124,8 +113,6 @@ mod tests {
         assert_eq!(true, eval_formula("10|1=").unwrap())
     }
 
-
-    
     #[test]
     fn test_nnf1() {
         let nnf = negation_normal_form("AB&!");
@@ -153,8 +140,6 @@ mod tests {
         let result = "AB&A!B!&|";
         assert_eq!(result, nnf)
     }
-
-
 
     #[test]
     fn test_cnf1() {
@@ -184,8 +169,6 @@ mod tests {
         assert_eq!(result, nnf)
     }
 
-
-
     #[test]
     fn test_sat1() {
         let result = sat("AB|");
@@ -214,7 +197,7 @@ mod tests {
     fn test_powerset1() {
         let set = vec![1];
         let result = vec![vec![], vec![1]];
-    
+
         assert_eq!(powerset(set), result);
     }
 
@@ -222,7 +205,33 @@ mod tests {
     fn test_powerset2() {
         let set = vec![0, 1];
         let result = vec![vec![], vec![0], vec![1], vec![0, 1]];
-    
+
         assert_eq!(powerset(set), result);
+    }
+
+    #[test]
+    fn test_not_operator() {
+        // NOT A where A = [1,2] and universal set is [1,2,3,4]
+        let formula = "A!";
+        let sets = vec![vec![1, 2], vec![3, 4]]; // A, B (B ignored here)
+        assert_eq!(evaluate_set(formula, sets), vec![3, 4]);
+    }
+
+    #[test]
+    fn test_and_operator() {
+        // A AND B where A = [1,2], B = [2,3]
+        let formula = "AB&";
+        let sets = vec![vec![1, 2], vec![2, 3]];
+        assert_eq!(evaluate_set(formula, sets), vec![2]);
+    }
+
+    #[test]
+    fn test_or_operator() {
+        // A OR B where A = [1,2], B = [2,3]
+        let formula = "AB|";
+        let sets = vec![vec![1, 2], vec![2, 3]];
+        let mut result = evaluate_set(formula, sets);
+        result.sort_unstable();
+        assert_eq!(result, vec![1, 2, 3]);
     }
 }

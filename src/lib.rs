@@ -1,2 +1,2 @@
-pub mod boole;
 pub mod ast;
+pub mod boole;
