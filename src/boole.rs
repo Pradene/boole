@@ -1,4 +1,4 @@
-use std::collections::{LinkedList, HashSet, HashMap};
+use std::collections::LinkedList;
 
 use crate::ast::AstNode;
 
@@ -16,7 +16,7 @@ pub fn multiplier(a: u32, b: u32) -> u32 {
         mul = mul >> 1;
     }
 
-    res
+    return res;
 }
 
 
@@ -31,12 +31,12 @@ pub fn adder(a: u32, b: u32) -> u32 {
         num = carry;
     }
 
-    res
+    return res;
 }
 
 
 pub fn gray_code(a: u32) -> u32 {
-    a ^ (a >> 1)
+    return a ^ (a >> 1);
 }
 
 
@@ -82,9 +82,9 @@ pub fn eval_formula(formula: &str) -> Result<bool, String> {
 
     // Final stack check
     if stack.len() == 1 {
-        Ok(stack.pop_back().unwrap())
+        return Ok(stack.pop_back().unwrap());
     } else {
-        Err("Invalid formula: stack has more than one value or is empty".to_string())
+        return Err("Invalid formula: stack has more than one value or is empty".to_string());
     }
 }
 
@@ -129,7 +129,7 @@ pub fn negation_normal_form(formula: &str) -> String {
     let ast = AstNode::try_from(formula).expect("Can't create AST from formula");
     let nnf = ast.to_nnf();
 
-    nnf.to_rpn()
+    return nnf.to_rpn();
 }
 
 
@@ -137,7 +137,7 @@ pub fn conjunctive_normal_form(formula: &str) -> String {
     let ast = AstNode::try_from(formula).expect("Can't create AST from formula");
     let nnf = ast.to_cnf();
 
-    nnf.to_rpn()
+    return nnf.to_rpn();
 }
 
 
@@ -151,11 +151,31 @@ pub fn sat(formula: &str) -> bool {
     }
 
     // Print each row of the truth table
-    for (values, result) in truth_table {
+    for (_, result) in truth_table {
         if result {
             return true;
         }
     }
 
-    false
+    return false;
+}
+
+pub fn powerset(set: Vec<i32>) -> Vec<Vec<i32>> {
+    let mut res = Vec::new();
+    
+    
+    let possibility = 1 << set.len();
+    for i in 0..possibility {
+        let mut v = Vec::new();
+        
+        for (index, value) in set.iter().enumerate() {
+            if i & (1 << index) != 0 {
+                v.push(*value);
+            }
+        }
+
+        res.push(v);
+    }
+
+    return res;
 }

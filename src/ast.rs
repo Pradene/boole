@@ -408,7 +408,6 @@ impl AstNode {
                     }
                     _ => panic!("Unexpected operator in CNF conversion"),
                 },
-                _ => panic!("Unexpected node type"),
             }
         }
         

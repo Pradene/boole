@@ -10,6 +10,8 @@ use boole::boole::{
 
 #[cfg(test)]
 mod tests {
+    use boole::boole::powerset;
+
     use super::*;
 
     #[test]
@@ -206,5 +208,21 @@ mod tests {
     fn test_sat4() {
         let result = sat("AA^");
         assert_eq!(false, result)
+    }
+
+    #[test]
+    fn test_powerset1() {
+        let set = vec![1];
+        let result = vec![vec![], vec![1]];
+    
+        assert_eq!(powerset(set), result);
+    }
+
+    #[test]
+    fn test_powerset2() {
+        let set = vec![0, 1];
+        let result = vec![vec![], vec![0], vec![1], vec![0, 1]];
+    
+        assert_eq!(powerset(set), result);
     }
 }
