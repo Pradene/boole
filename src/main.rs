@@ -1,10 +1,9 @@
-use boole::boole::evaluate_set;
+use boole::boole::{map, reverse_map};
 
 fn main() {
-    let sets = vec![vec![0, 1, 2, 3], vec![3, 4, 5, 6]];
+    let mapped = map(165, u16::MAX);
+    println!("result : {}", mapped);
 
-    let formula = "AB&!";
-    let result = evaluate_set(formula, sets);
-
-    println!("result : {:?}", result);
+    let original = reverse_map(mapped);
+    println!("result : {:?}", original);
 }

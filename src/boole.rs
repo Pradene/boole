@@ -182,3 +182,30 @@ pub fn evaluate_set(formula: &str, sets: Vec<Vec<i32>>) -> Vec<i32> {
 
     return ast.evaluate_set(sets, universal_set).unwrap();
 }
+
+pub fn map(x: u16, y: u16) -> f64 {
+    let mut result: u32 = 0;
+
+    for i in 0..16 {
+        let x_bit = (x >> i) & 1;
+        let y_bit = (y >> i) & 1;
+
+        result |= ((x_bit as u32) << (2 * i)) | ((y_bit as u32) << (2 * i + 1));
+    }
+
+    return result as f64 / u32::MAX as f64;
+}
+
+pub fn reverse_map(z: f64) -> (u16, u16) {
+    let mut x: u16 = 0;
+    let mut y: u16 = 0;
+
+    let z = (z * u32::MAX as f64) as u32;
+
+    for i in 0..16 {
+        x |= (((z >> (2 * i)) & 1) << i) as u16; // Extract every 2nd bit starting from 0
+        y |= (((z >> (2 * i + 1)) & 1) << i) as u16; // Extract every 2nd bit starting from 1
+    }
+
+    return (x, y);
+}

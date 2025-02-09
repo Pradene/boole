@@ -184,7 +184,7 @@ impl AstNode {
                 let left_set: HashSet<i32> = left_set.into_iter().collect();
                 let right_set: HashSet<i32> = right_set.into_iter().collect();
 
-                let result: Result<Vec<i32>, String> = match op {
+                match op {
                     Operator::And => Ok(left_set
                         .intersection(&right_set)
                         .cloned()
@@ -212,9 +212,7 @@ impl AstNode {
                             .collect::<Vec<i32>>())
                     }
                     _ => Err(format!("Invalid operator")),
-                };
-
-                result
+                }
             }
         }
     }
