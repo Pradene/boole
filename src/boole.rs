@@ -180,7 +180,9 @@ pub fn evaluate_set(formula: &str, sets: Vec<Vec<i32>>) -> Vec<i32> {
     let ast = AstNode::try_from(formula).unwrap();
     let universal_set: HashSet<i32> = sets.iter().flatten().cloned().collect();
 
-    return ast.evaluate_set(sets, universal_set).unwrap();
+    let mut result = ast.evaluate_set(sets, universal_set).unwrap();
+    result.sort();
+    return result;
 }
 
 pub fn map(x: u16, y: u16) -> f64 {
