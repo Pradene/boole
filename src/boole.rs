@@ -1,7 +1,22 @@
+use crate::ast::AstNode;
 use std::collections::{HashSet, LinkedList};
 
-use crate::ast::AstNode;
+// Add two numbers using only bitwise, shift and comparison operators
+pub fn adder(a: u32, b: u32) -> u32 {
+    let mut carry;
+    let mut res = a;
+    let mut num = b;
 
+    while num != 0 {
+        carry = (res & num) << 1;
+        res = res ^ num;
+        num = carry;
+    }
+
+    return res;
+}
+
+// Multiply two numbers using only bitwise, shift and comparison operators
 pub fn multiplier(a: u32, b: u32) -> u32 {
     let mut res = 0;
     let mut mul = b;
@@ -14,20 +29,6 @@ pub fn multiplier(a: u32, b: u32) -> u32 {
 
         add = add << 1;
         mul = mul >> 1;
-    }
-
-    return res;
-}
-
-pub fn adder(a: u32, b: u32) -> u32 {
-    let mut carry;
-    let mut res = a;
-    let mut num = b;
-
-    while num != 0 {
-        carry = (res & num) << 1;
-        res = res ^ num;
-        num = carry;
     }
 
     return res;
@@ -133,9 +134,9 @@ pub fn negation_normal_form(formula: &str) -> String {
 
 pub fn conjunctive_normal_form(formula: &str) -> String {
     let ast = AstNode::try_from(formula).expect("Can't create AST from formula");
-    let nnf = ast.to_cnf();
+    let cnf = ast.to_cnf();
 
-    return nnf.to_rpn();
+    return cnf.to_rpn();
 }
 
 pub fn sat(formula: &str) -> bool {
@@ -147,7 +148,7 @@ pub fn sat(formula: &str) -> bool {
         return false;
     }
 
-    // Print each row of the truth table
+    // Check if a combination of values return true
     for (_, result) in truth_table {
         if result {
             return true;
