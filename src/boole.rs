@@ -42,7 +42,7 @@ pub fn eval_formula(formula: &str) -> Result<bool, String> {
     let mut stack: LinkedList<bool> = LinkedList::new();
 
     // Helper function to evaluate binary operations
-    fn eval_binary_op<F>(op: F, stack: &mut LinkedList<bool>) -> Result<(), String>
+    fn eval_binary_op<F>(stack: &mut LinkedList<bool>, op: F) -> Result<(), String>
     where
         F: Fn(bool, bool) -> bool,
     {
@@ -55,7 +55,7 @@ pub fn eval_formula(formula: &str) -> Result<bool, String> {
     }
 
     // Helper function to evaluate unary operations
-    fn eval_unary_op<F>(op: F, stack: &mut LinkedList<bool>) -> Result<(), String>
+    fn eval_unary_op<F>(stack: &mut LinkedList<bool>, op: F) -> Result<(), String>
     where
         F: Fn(bool) -> bool,
     {
@@ -72,12 +72,12 @@ pub fn eval_formula(formula: &str) -> Result<bool, String> {
         match ch {
             '0' => stack.push_back(false),
             '1' => stack.push_back(true),
-            '|' => eval_binary_op(|a, b| a | b, &mut stack)?,
-            '&' => eval_binary_op(|a, b| a & b, &mut stack)?,
-            '^' => eval_binary_op(|a, b| a ^ b, &mut stack)?,
-            '>' => eval_binary_op(|a, b| !a | b, &mut stack)?,
-            '=' => eval_binary_op(|a, b| a == b, &mut stack)?,
-            '!' => eval_unary_op(|a| !a, &mut stack)?,
+            '|' => eval_binary_op(&mut stack, |a, b| a | b)?,
+            '&' => eval_binary_op(&mut stack, |a, b| a & b)?,
+            '^' => eval_binary_op(&mut stack, |a, b| a ^ b)?,
+            '>' => eval_binary_op(&mut stack, |a, b| !a | b)?,
+            '=' => eval_binary_op(&mut stack, |a, b| a == b)?,
+            '!' => eval_unary_op(&mut stack, |a| !a)?,
             _ => return Err(format!("Invalid character encountered: {}", ch)),
         }
     }
@@ -159,7 +159,7 @@ pub fn sat(formula: &str) -> bool {
 }
 
 pub fn powerset(set: Vec<i32>) -> Vec<Vec<i32>> {
-    let mut res = Vec::new();
+    let mut result = Vec::new();
 
     let possibility = 1 << set.len();
     for i in 0..possibility {
@@ -171,10 +171,10 @@ pub fn powerset(set: Vec<i32>) -> Vec<Vec<i32>> {
             }
         }
 
-        res.push(v);
+        result.push(v);
     }
 
-    return res;
+    return result;
 }
 
 pub fn evaluate_set(formula: &str, sets: Vec<Vec<i32>>) -> Vec<i32> {
@@ -183,6 +183,7 @@ pub fn evaluate_set(formula: &str, sets: Vec<Vec<i32>>) -> Vec<i32> {
 
     let mut result = ast.evaluate_set(sets, universal_set).unwrap();
     result.sort();
+
     return result;
 }
 
@@ -206,8 +207,8 @@ pub fn reverse_map(z: f64) -> (u16, u16) {
     let z = (z * u32::MAX as f64) as u32;
 
     for i in 0..16 {
-        x |= (((z >> (2 * i)) & 1) << i) as u16; // Extract every 2nd bit starting from 0
-        y |= (((z >> (2 * i + 1)) & 1) << i) as u16; // Extract every 2nd bit starting from 1
+        x |= (((z >> (2 * i)) & 1) << i) as u16; // Extract every 2 bit starting from 0
+        y |= (((z >> (2 * i + 1)) & 1) << i) as u16; // Extract every 2 bit starting from 1
     }
 
     return (x, y);

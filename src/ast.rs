@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet, LinkedList};
 use std::fmt;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Operator {
     Or,      // Logical OR (∨)
     And,     // Logical AND (∧)
@@ -250,31 +250,31 @@ impl AstNode {
             // Handle unary operators (NOT)
             AstNode::UnaryOperator(Operator::Not, child) => {
                 match &**child {
-                    // Double negation elimination: ¬¬A → A
+                    // Double negation elimination: ¬¬A == A
                     AstNode::UnaryOperator(Operator::Not, grandchild) => grandchild.to_nnf(),
 
-                    // De Morgan's laws: ¬(A ∧ B) → (¬A ∨ ¬B)
+                    // De Morgan's laws: ¬(A ∧ B) == (¬A ∨ ¬B)
                     AstNode::BinaryOperator(Operator::And, left, right) => {
                         let b = AstNode::UnaryOperator(Operator::Not, right.clone()).to_nnf();
                         let a = AstNode::UnaryOperator(Operator::Not, left.clone()).to_nnf();
                         AstNode::BinaryOperator(Operator::Or, Box::new(a), Box::new(b))
                     }
 
-                    // De Morgan's laws: ¬(A ∨ B) → (¬A ∧ ¬B)
+                    // De Morgan's laws: ¬(A ∨ B) == (¬A ∧ ¬B)
                     AstNode::BinaryOperator(Operator::Or, left, right) => {
                         let b = AstNode::UnaryOperator(Operator::Not, right.clone()).to_nnf();
                         let a = AstNode::UnaryOperator(Operator::Not, left.clone()).to_nnf();
                         AstNode::BinaryOperator(Operator::And, Box::new(a), Box::new(b))
                     }
 
-                    // Handle implication: ¬(A → B) ≡ A ∧ ¬B
+                    // Handle implication: ¬(A → B) == A ∧ ¬B
                     AstNode::BinaryOperator(Operator::Implies, left, right) => {
                         let b = AstNode::UnaryOperator(Operator::Not, right.clone()).to_nnf();
                         let a = left.to_nnf();
                         AstNode::BinaryOperator(Operator::And, Box::new(a), Box::new(b))
                     }
 
-                    // Handle equivalence: ¬(A ↔ B) ≡ (A ∧ ¬B) ∨ (¬A ∧ B)
+                    // Handle equivalence: ¬(A ↔ B) == (A ∧ ¬B) ∨ (¬A ∧ B)
                     AstNode::BinaryOperator(Operator::Iff, left, right) => {
                         let b = right.to_nnf();
                         let bi = AstNode::UnaryOperator(Operator::Not, right.clone()).to_nnf();
@@ -295,7 +295,7 @@ impl AstNode {
                         )
                     }
 
-                    // Handle XOR: ¬(A ⊕ B) ≡ (A ↔ B) ≡ (A ∧ B) ∨ (¬A ∧ ¬B)
+                    // Handle XOR: ¬(A ⊕ B) == (A ↔ B) == (A ∧ B) ∨ (¬A ∧ ¬B)
                     AstNode::BinaryOperator(Operator::Xor, left, right) => {
                         let b = right.to_nnf();
                         let bi = AstNode::UnaryOperator(Operator::Not, right.clone()).to_nnf();
@@ -334,14 +334,14 @@ impl AstNode {
                         AstNode::BinaryOperator(op.clone(), Box::new(a), Box::new(b))
                     }
 
-                    // A → B ≡ ¬A ∨ B
+                    // A → B == ¬A ∨ B
                     Operator::Implies => {
                         let b = right.to_nnf();
                         let a = AstNode::UnaryOperator(Operator::Not, left.clone()).to_nnf();
                         AstNode::BinaryOperator(Operator::Or, Box::new(a), Box::new(b))
                     }
 
-                    // A ↔ B ≡ (A ∧ B) ∨ (¬A ∧ ¬B)
+                    // A ↔ B == (A ∧ B) ∨ (¬A ∧ ¬B)
                     Operator::Iff => {
                         let b = right.to_nnf();
                         let bi = AstNode::UnaryOperator(Operator::Not, right.clone()).to_nnf();
@@ -362,7 +362,7 @@ impl AstNode {
                         )
                     }
 
-                    // A ⊕ B ≡ (A ∧ ¬B) ∨ (¬A ∧ B)
+                    // A ⊕ B == (A ∧ ¬B) ∨ (¬A ∧ B)
                     Operator::Xor => {
                         let b = right.to_nnf();
                         let bi = AstNode::UnaryOperator(Operator::Not, right.clone()).to_nnf();
@@ -457,10 +457,12 @@ impl AstNode {
             }
         }
 
-        distribute(&self.to_nnf()).build_right_leaning_tree()
+        distribute(&self.to_nnf())
+            .to_right_associative_and()
+            .to_right_associative_or()
     }
 
-    fn build_right_leaning_tree(&self) -> AstNode {
+    fn to_right_associative_and(&self) -> AstNode {
         fn collect_clauses(node: &AstNode) -> Vec<AstNode> {
             match node {
                 // If it's an AND, collect clauses from both sides
@@ -481,6 +483,50 @@ impl AstNode {
         iter.fold(last, |acc, clause| {
             AstNode::BinaryOperator(Operator::And, Box::new(clause), Box::new(acc))
         })
+    }
+
+    pub fn to_right_associative_or(&self) -> AstNode {
+        fn collect_or_operands(node: &AstNode) -> Vec<AstNode> {
+            match node {
+                // If it's an OR, collect operands from both sides
+                AstNode::BinaryOperator(Operator::Or, left, right) => {
+                    let mut operands = Vec::<AstNode>::new();
+                    operands.extend(collect_or_operands(left));
+                    operands.extend(collect_or_operands(right));
+                    operands
+                }
+                // If it's not an OR, recursively process it but treat it as a single operand
+                _ => vec![node.to_right_associative_or()],
+            }
+        }
+
+        match self {
+            AstNode::Variable(_) => self.clone(),
+
+            AstNode::UnaryOperator(op, child) => {
+                AstNode::UnaryOperator(op.clone(), Box::new(child.to_right_associative_or()))
+            }
+
+            AstNode::BinaryOperator(Operator::Or, _, _) => {
+                // Collect all OR operands and build right-leaning tree
+                let operands = collect_or_operands(self);
+                let mut iter = operands.into_iter().rev();
+                let last = iter.next().expect("OR must have at least one operand");
+
+                iter.fold(last, |acc, operand| {
+                    AstNode::BinaryOperator(Operator::Or, Box::new(operand), Box::new(acc))
+                })
+            }
+
+            AstNode::BinaryOperator(op, left, right) => {
+                // For non-OR operators, just recursively process children
+                AstNode::BinaryOperator(
+                    op.clone(),
+                    Box::new(left.to_right_associative_or()),
+                    Box::new(right.to_right_associative_or()),
+                )
+            }
+        }
     }
 
     pub fn to_rpn(&self) -> String {

@@ -31,7 +31,7 @@ mod tests {
         let a = u32::MAX - 1;
         let b = 1;
 
-        assert_eq!(a + b, adder(a, b));
+        assert_eq!(adder(a, b), u32::MAX);
     }
 
     #[test]
@@ -39,6 +39,6 @@ mod tests {
         let a = u32::MAX;
         let b = 1;
 
-        assert!(adder(a, b) == 0, "Must overflow");
+        assert_eq!(adder(a, b), u32::MIN);
     }
 }
