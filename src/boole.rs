@@ -102,26 +102,27 @@ pub fn print_truth_table(formula: &str) {
     }
 
     // Get the variables from the truth table
-    let var_list: Vec<char> = ast.get_variables().into_iter().collect();
+    let mut variables: Vec<char> = ast.get_variables().into_iter().collect();
+    variables.sort();
 
     // Print the header
-    for var in &var_list {
-        print!("| {} ", var);
+    for v in &variables {
+        print!("| {} ", v);
     }
     println!("| = |");
 
     // Print the separator line
-    for _ in &var_list {
+    for _ in &variables {
         print!("|---");
     }
     println!("|---|");
 
     // Print each row of the truth table
-    for (values, result) in truth_table {
-        for var in &var_list {
-            print!("| {} ", if *values.get(var).unwrap() { 1 } else { 0 });
+    for (tt_variables, tt_result) in truth_table {
+        for v in &variables {
+            print!("| {} ", if *tt_variables.get(v).unwrap() { 1 } else { 0 });
         }
-        println!("| {} |", if result { 1 } else { 0 });
+        println!("| {} |", if tt_result { 1 } else { 0 });
     }
 }
 

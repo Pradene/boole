@@ -4,27 +4,23 @@ mod tests {
 
     #[test]
     fn test_not_operator() {
-        // NOT A where A = [1,2] and universal set is [1,2,3,4]
         let formula = "A!";
-        let sets = vec![vec![1, 2], vec![3, 4]]; // A, B (B ignored here)
-        assert_eq!(evaluate_set(formula, sets), vec![3, 4]);
+        let sets = vec![vec![0, 1, 2]];
+        assert_eq!(evaluate_set(formula, sets), vec![]);
     }
 
     #[test]
     fn test_and_operator() {
-        // A AND B where A = [1,2], B = [2,3]
         let formula = "AB&";
-        let sets = vec![vec![1, 2], vec![2, 3]];
-        assert_eq!(evaluate_set(formula, sets), vec![2]);
+        let sets = vec![vec![0, 1, 2], vec![0, 3, 4]];
+        assert_eq!(evaluate_set(formula, sets), vec![0]);
     }
 
     #[test]
     fn test_or_operator() {
-        // A OR B where A = [1,2], B = [2,3]
         let formula = "AB|";
-        let sets = vec![vec![1, 2], vec![2, 3]];
-        let mut result = evaluate_set(formula, sets);
-        result.sort_unstable();
-        assert_eq!(result, vec![1, 2, 3]);
+        let sets = vec![vec![0, 1, 2], vec![3, 4, 5]];
+        let result = evaluate_set(formula, sets);
+        assert_eq!(result, vec![0, 1, 2, 3, 4, 5]);
     }
 }

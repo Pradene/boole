@@ -458,72 +458,50 @@ impl AstNode {
         }
 
         distribute(&self.to_nnf())
-            .to_right_associative_and()
-            .to_right_associative_or()
+            .to_right_associative(&Operator::Or)
+            .to_right_associative(&Operator::And)
     }
 
-    fn to_right_associative_and(&self) -> AstNode {
-        fn collect_clauses(node: &AstNode) -> Vec<AstNode> {
-            match node {
-                // If it's an AND, collect clauses from both sides
-                AstNode::BinaryOperator(Operator::And, left, right) => {
-                    let mut clauses = Vec::<AstNode>::new();
-                    clauses.extend(collect_clauses(left));
-                    clauses.extend(collect_clauses(right));
-                    clauses
-                }
-                // If it's not an AND, it's a single clause
-                _ => vec![node.clone()],
+    // Generic method to collect operands for associative operators
+    fn collect_operands(&self, target_op: &Operator) -> Vec<AstNode> {
+        match self {
+            AstNode::BinaryOperator(op, left, right) if op == target_op => {
+                let mut operands = Vec::new();
+                operands.extend(left.collect_operands(target_op));
+                operands.extend(right.collect_operands(target_op));
+                operands
             }
+            _ => vec![self.clone()],
         }
-
-        let mut iter = collect_clauses(self).into_iter().rev();
-        let last = iter.next().expect("CNF must have at least one clause");
-
-        iter.fold(last, |acc, clause| {
-            AstNode::BinaryOperator(Operator::And, Box::new(clause), Box::new(acc))
-        })
     }
 
-    pub fn to_right_associative_or(&self) -> AstNode {
-        fn collect_or_operands(node: &AstNode) -> Vec<AstNode> {
-            match node {
-                // If it's an OR, collect operands from both sides
-                AstNode::BinaryOperator(Operator::Or, left, right) => {
-                    let mut operands = Vec::<AstNode>::new();
-                    operands.extend(collect_or_operands(left));
-                    operands.extend(collect_or_operands(right));
-                    operands
-                }
-                // If it's not an OR, recursively process it but treat it as a single operand
-                _ => vec![node.to_right_associative_or()],
-            }
-        }
-
+    fn to_right_associative(&self, target_op: &Operator) -> AstNode {
         match self {
             AstNode::Variable(_) => self.clone(),
 
             AstNode::UnaryOperator(op, child) => {
-                AstNode::UnaryOperator(op.clone(), Box::new(child.to_right_associative_or()))
+                AstNode::UnaryOperator(op.clone(), Box::new(child.to_right_associative(target_op)))
             }
 
-            AstNode::BinaryOperator(Operator::Or, _, _) => {
-                // Collect all OR operands and build right-leaning tree
-                let operands = collect_or_operands(self);
+            AstNode::BinaryOperator(op, _, _) if op == target_op => {
+                // Collect all operands for this operator and build right-leaning tree
+                let operands = self.collect_operands(target_op);
                 let mut iter = operands.into_iter().rev();
-                let last = iter.next().expect("OR must have at least one operand");
+                let last = iter
+                    .next()
+                    .expect("Operator must have at least one operand");
 
                 iter.fold(last, |acc, operand| {
-                    AstNode::BinaryOperator(Operator::Or, Box::new(operand), Box::new(acc))
+                    AstNode::BinaryOperator(target_op.clone(), Box::new(operand), Box::new(acc))
                 })
             }
 
             AstNode::BinaryOperator(op, left, right) => {
-                // For non-OR operators, just recursively process children
+                // For other operators, just recursively process children
                 AstNode::BinaryOperator(
                     op.clone(),
-                    Box::new(left.to_right_associative_or()),
-                    Box::new(right.to_right_associative_or()),
+                    Box::new(left.to_right_associative(target_op)),
+                    Box::new(right.to_right_associative(target_op)),
                 )
             }
         }

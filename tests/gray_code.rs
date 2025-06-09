@@ -31,4 +31,9 @@ mod tests {
     fn test_gray_code_5() {
         assert_eq!(gray_code(5), 7)
     }
+
+    #[test]
+    fn test_gray_code_255() {
+        assert_eq!(gray_code(255), 128)
+    }
 }

@@ -1,9 +1,15 @@
-use boole::boole::{map, reverse_map};
+use boole::boole::print_truth_table;
 
 fn main() {
-    let mapped = map(165, u16::MAX);
-    println!("result : {}", mapped);
+    println!("Truth table of & :");
+    print_truth_table("AB&");
+    println!();
 
-    let original = reverse_map(mapped);
-    println!("result : {:?}", original);
+    println!("Truth table of | :");
+    print_truth_table("AB|");
+    println!();
+
+    println!("Truth table of > :");
+    print_truth_table("AB>");
+    println!();
 }
