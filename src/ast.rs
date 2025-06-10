@@ -178,32 +178,29 @@ impl AstNode {
                 _ => Err(format!("Invalid operator")),
             },
             AstNode::BinaryOperator(op, left, right) => {
-                let left_set: Vec<i32> = left.evaluate_set(sets.clone(), universal_set.clone())?;
-                let right_set = right.evaluate_set(sets.clone(), universal_set.clone())?;
+                let lset: Vec<i32> = left.evaluate_set(sets.clone(), universal_set.clone())?;
+                let lset: HashSet<i32> = lset.into_iter().collect();
 
-                let left_set: HashSet<i32> = left_set.into_iter().collect();
-                let right_set: HashSet<i32> = right_set.into_iter().collect();
+                let rset: Vec<i32> = right.evaluate_set(sets.clone(), universal_set.clone())?;
+                let rset: HashSet<i32> = rset.into_iter().collect();
 
                 match op {
-                    Operator::And => Ok(left_set
-                        .intersection(&right_set)
-                        .cloned()
-                        .collect::<Vec<i32>>()),
-                    Operator::Or => Ok(left_set.union(&right_set).cloned().collect::<Vec<i32>>()),
-                    Operator::Xor => Ok(left_set
-                        .symmetric_difference(&right_set)
+                    Operator::And => Ok(lset.intersection(&rset).cloned().collect::<Vec<i32>>()),
+                    Operator::Or => Ok(lset.union(&rset).cloned().collect::<Vec<i32>>()),
+                    Operator::Xor => Ok(lset
+                        .symmetric_difference(&rset)
                         .cloned()
                         .collect::<Vec<i32>>()),
                     Operator::Implies => {
                         let not_a = universal_set
-                            .difference(&left_set)
+                            .difference(&lset)
                             .cloned()
                             .collect::<HashSet<_>>();
-                        Ok(not_a.union(&right_set).cloned().collect::<Vec<i32>>())
+                        Ok(not_a.union(&rset).cloned().collect::<Vec<i32>>())
                     }
                     Operator::Iff => {
-                        let sym_diff = left_set
-                            .symmetric_difference(&right_set)
+                        let sym_diff = lset
+                            .symmetric_difference(&rset)
                             .cloned()
                             .collect::<HashSet<_>>();
                         Ok(universal_set

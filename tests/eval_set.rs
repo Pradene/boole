@@ -23,4 +23,20 @@ mod tests {
         let result = evaluate_set(formula, sets);
         assert_eq!(result, vec![0, 1, 2, 3, 4, 5]);
     }
+
+    #[test]
+    fn test_equal() {
+        let formula = "AB=";
+        let sets = vec![vec![0, 1, 2], vec![0, 1, 2]];
+        let result = evaluate_set(formula, sets);
+        assert_eq!(result, vec![0, 1, 2]);
+    }
+
+    #[test]
+    fn test_not_equal() {
+        let formula = "AB=";
+        let sets = vec![vec![0, 1, 2], vec![0, 1, 3]];
+        let result = evaluate_set(formula, sets);
+        assert_eq!(result, vec![0, 1]);
+    }
 }

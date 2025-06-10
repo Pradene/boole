@@ -179,7 +179,13 @@ pub fn powerset(set: Vec<i32>) -> Vec<Vec<i32>> {
 }
 
 pub fn evaluate_set(formula: &str, sets: Vec<Vec<i32>>) -> Vec<i32> {
-    let ast = AstNode::try_from(formula).unwrap();
+    let ast = AstNode::try_from(formula).expect("Can't create AST from formula");
+    let variables = ast.get_variables();
+
+    if variables.len() != sets.len() {
+        panic!("Variables length and sets length are not equal");
+    }
+
     let universal_set: HashSet<i32> = sets.iter().flatten().cloned().collect();
 
     let mut result = ast.evaluate_set(sets, universal_set).unwrap();
